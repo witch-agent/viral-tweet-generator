@@ -207,20 +207,42 @@
             }
         };
 
-        function generate() {
+        // Configuration - Vercel API endpoint
+        const API_ENDPOINT = 'https://viral-tweet-generator-lac.vercel.app/api/tweet';
+        
+        async function generate() {
             const topic = document.getElementById('topic').value;
             if (!topic) { alert('Enter a topic!'); return; }
             
             document.getElementById('loading').classList.add('show');
             document.getElementById('output').classList.remove('show');
             
-            setTimeout(() => {
-                const result = templates[format][tone](topic);
-                document.getElementById('outputContent').textContent = result;
-                document.getElementById('tweetText').textContent = result;
+            try {
+                const response = await fetch(API_ENDPOINT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic, format, tone })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const result = data.result || 'No result generated';
+                    document.getElementById('outputContent').textContent = result;
+                    document.getElementById('tweetText').textContent = result;
+                } else {
+                    alert('Error generating tweet');
+                    document.getElementById('loading').classList.remove('show');
+                    return;
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection error');
                 document.getElementById('loading').classList.remove('show');
-                document.getElementById('output').classList.add('show');
-            }, 1000);
+                return;
+            }
+            
+            document.getElementById('loading').classList.remove('show');
+            document.getElementById('output').classList.add('show');
         }
 
         function copy() {
